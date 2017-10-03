@@ -1,5 +1,5 @@
 import React, { Component, PropTypes } from 'react';
-import Relay from 'react-relay/classic';
+import {gql} from 'react-apollo';
 
 import ProductPrice from './ProductPrice';
 
@@ -25,6 +25,28 @@ class ProductItem extends Component {
     return JSON.stringify(data);
   };
 
+  static fragments = {
+    product: gql`
+      fragment ProductFragmentQuery on ProductType {
+        id
+        name
+        price {
+          currency
+          gross
+          grossLocalized
+          net
+        }
+        availability {
+          ...ProductPriceFragmentQuery
+        }
+        thumbnailUrl1x: thumbnailUrl(size: "255x255")
+        thumbnailUrl2x: thumbnailUrl(size: "510x510")
+        url
+      }
+      ${ProductPrice.fragments.availability}
+    `
+  };
+
   render() {
     const { product } = this.props;
     let productSchema = this.getSchema();
@@ -39,7 +61,7 @@ class ProductItem extends Component {
                 <span className="product-list-item-name" title={product.name}>{product.name}</span>
             </div>
             <div className="panel-footer">
-              <ProductPrice price={product.price} availability={product.availability} />
+              <ProductPrice availability={product.availability} />
             </div>
           </div>
         </a>
@@ -48,25 +70,4 @@ class ProductItem extends Component {
   }
 }
 
-export default Relay.createContainer(ProductItem, {
-  fragments: {
-    product: () => Relay.QL`
-      fragment on ProductType {
-        id
-        name
-        price {
-          currency
-          gross
-          grossLocalized
-          net
-        }
-        availability {
-          ${ProductPrice.getFragment('availability')}
-        }
-        thumbnailUrl1x: thumbnailUrl(size: "255x255")
-        thumbnailUrl2x: thumbnailUrl(size: "510x510")
-        url
-      }
-    `
-  }
-});
+export default ProductItem;
